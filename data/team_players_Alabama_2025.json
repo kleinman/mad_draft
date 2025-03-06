@@ -1,0 +1,23 @@
+[
+  {
+    "name": "Player 1 (Alabama)",
+    "position": "G",
+    "jersey_number": 1,
+    "year_in_school": "Freshman",
+    "school": "Alabama"
+  },
+  {
+    "name": "Player 2 (Alabama)",
+    "position": "F",
+    "jersey_number": 2,
+    "year_in_school": "Sophomore",
+    "school": "Alabama"
+  },
+  {
+    "name": "Player 3 (Alabama)",
+    "position": "C",
+    "jersey_number": 3,
+    "year_in_school": "Junior",
+    "school": "Alabama"
+  }
+]

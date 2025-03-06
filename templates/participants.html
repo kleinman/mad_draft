@@ -1,0 +1,179 @@
+{% extends 'base.html' %}
+
+{% block title %}Participants - March Madness Fantasy Draft{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-8">
+        <h1>Participants</h1>
+        <p class="text-muted">Manage participants in your fantasy draft</p>
+    </div>
+    <div class="col-md-4 text-end">
+        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addParticipantModal">
+            <i class="fas fa-user-plus me-2"></i> Add Participant
+        </button>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-users me-2"></i>Current Participants</h5>
+            </div>
+            <div class="card-body">
+                {% if participants %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Email</th>
+                                <th>Players Drafted</th>
+                                <th>Current Score</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for participant in participants %}
+                            <tr>
+                                <td>{{ participant.name }}</td>
+                                <td>{{ participant.email }}</td>
+                                <td>{{ participant.draft_picks|length }}</td>
+                                <td>{{ participant.get_total_score() }}</td>
+                                <td>
+                                    <button class="btn btn-sm btn-primary edit-participant-btn" 
+                                            data-participant-id="{{ participant.id }}" 
+                                            data-participant-name="{{ participant.name }}"
+                                            data-participant-email="{{ participant.email }}"
+                                            data-bs-toggle="modal" 
+                                            data-bs-target="#editParticipantModal">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    <button class="btn btn-sm btn-danger delete-participant-btn" 
+                                            data-participant-id="{{ participant.id }}" 
+                                            data-participant-name="{{ participant.name }}">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i> No participants have been added yet. Use the "Add Participant" button to get started.
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Participant Modal -->
+<div class="modal fade" id="addParticipantModal" tabindex="-1" aria-labelledby="addParticipantModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addParticipantModalLabel">Add Participant</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form action="{{ url_for('participants') }}" method="post">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="name" class="form-label">Name</label>
+                        <input type="text" class="form-control" id="name" name="name" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="email" class="form-label">Email (optional)</label>
+                        <input type="email" class="form-control" id="email" name="email">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Add Participant</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Participant Modal -->
+<div class="modal fade" id="editParticipantModal" tabindex="-1" aria-labelledby="editParticipantModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editParticipantModalLabel">Edit Participant</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="edit-participant-form" action="{{ url_for('participants') }}" method="post">
+                <input type="hidden" id="edit-participant-id" name="participant_id">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="edit-name" class="form-label">Name</label>
+                        <input type="text" class="form-control" id="edit-name" name="name" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="edit-email" class="form-label">Email (optional)</label>
+                        <input type="email" class="form-control" id="edit-email" name="email">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Set up edit participant modal
+        const editButtons = document.querySelectorAll('.edit-participant-btn');
+        editButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                const participantId = this.dataset.participantId;
+                const participantName = this.dataset.participantName;
+                const participantEmail = this.dataset.participantEmail;
+                
+                document.getElementById('edit-participant-id').value = participantId;
+                document.getElementById('edit-name').value = participantName;
+                document.getElementById('edit-email').value = participantEmail;
+            });
+        });
+        
+        // Set up delete participant functionality
+        const deleteButtons = document.querySelectorAll('.delete-participant-btn');
+        deleteButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                const participantId = this.dataset.participantId;
+                const participantName = this.dataset.participantName;
+                
+                if (confirm(`Are you sure you want to delete ${participantName}? This will also remove all their draft picks.`)) {
+                    // Send delete request to server
+                    fetch(`/api/participant/${participantId}`, {
+                        method: 'DELETE',
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.error) {
+                            alert(data.error);
+                        } else {
+                            // Reload page to show updated participant list
+                            window.location.reload();
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        alert('An error occurred while deleting the participant.');
+                    });
+                }
+            });
+        });
+    });
+</script>
+{% endblock %}

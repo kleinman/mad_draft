@@ -1,0 +1,23 @@
+[
+  {
+    "name": "Jared Butler",
+    "position": "G",
+    "jersey_number": 12,
+    "year_in_school": "Junior",
+    "school": "Baylor"
+  },
+  {
+    "name": "Davion Mitchell",
+    "position": "G",
+    "jersey_number": 45,
+    "year_in_school": "Junior",
+    "school": "Baylor"
+  },
+  {
+    "name": "MaCio Teague",
+    "position": "G",
+    "jersey_number": 31,
+    "year_in_school": "Senior",
+    "school": "Baylor"
+  }
+]

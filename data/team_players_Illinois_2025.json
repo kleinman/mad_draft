@@ -1,0 +1,23 @@
+[
+  {
+    "name": "Player 1 (Illinois)",
+    "position": "G",
+    "jersey_number": 1,
+    "year_in_school": "Freshman",
+    "school": "Illinois"
+  },
+  {
+    "name": "Player 2 (Illinois)",
+    "position": "F",
+    "jersey_number": 2,
+    "year_in_school": "Sophomore",
+    "school": "Illinois"
+  },
+  {
+    "name": "Player 3 (Illinois)",
+    "position": "C",
+    "jersey_number": 3,
+    "year_in_school": "Junior",
+    "school": "Illinois"
+  }
+]

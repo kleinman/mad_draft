@@ -1,0 +1,23 @@
+[
+  {
+    "name": "Player 1 (Ohio State)",
+    "position": "G",
+    "jersey_number": 1,
+    "year_in_school": "Freshman",
+    "school": "Ohio State"
+  },
+  {
+    "name": "Player 2 (Ohio State)",
+    "position": "F",
+    "jersey_number": 2,
+    "year_in_school": "Sophomore",
+    "school": "Ohio State"
+  },
+  {
+    "name": "Player 3 (Ohio State)",
+    "position": "C",
+    "jersey_number": 3,
+    "year_in_school": "Junior",
+    "school": "Ohio State"
+  }
+]

@@ -1,0 +1,127 @@
+{% extends 'base.html' %}
+
+{% block title %}Home - March Madness Fantasy Draft{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-12 text-center mb-5">
+        <h1 class="display-4">March Madness Fantasy Draft</h1>
+        <p class="lead">Track your fantasy draft for the NCAA March Madness basketball tournament</p>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6 mb-4">
+        <div class="card h-100">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-users me-2"></i>Quick Links</h5>
+            </div>
+            <div class="card-body">
+                <div class="list-group">
+                    <a href="{{ url_for('players') }}" class="list-group-item list-group-item-action">
+                        <div class="d-flex w-100 justify-content-between">
+                            <h5 class="mb-1">Browse Players</h5>
+                            <small><i class="fas fa-arrow-right"></i></small>
+                        </div>
+                        <p class="mb-1">View all players in the tournament with their stats</p>
+                    </a>
+                    <a href="{{ url_for('draft') }}" class="list-group-item list-group-item-action">
+                        <div class="d-flex w-100 justify-content-between">
+                            <h5 class="mb-1">Manage Draft</h5>
+                            <small><i class="fas fa-arrow-right"></i></small>
+                        </div>
+                        <p class="mb-1">Conduct your fantasy draft and assign players</p>
+                    </a>
+                    <a href="{{ url_for('leaderboard') }}" class="list-group-item list-group-item-action">
+                        <div class="d-flex w-100 justify-content-between">
+                            <h5 class="mb-1">View Leaderboard</h5>
+                            <small><i class="fas fa-arrow-right"></i></small>
+                        </div>
+                        <p class="mb-1">See who's leading the fantasy competition</p>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6 mb-4">
+        <div class="card h-100">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-info-circle me-2"></i>About This App</h5>
+            </div>
+            <div class="card-body">
+                <h5>How It Works</h5>
+                <ol>
+                    <li>Add your friends as participants</li>
+                    <li>Conduct your offline snake draft and record picks in the app</li>
+                    <li>The app automatically tracks player performance throughout the tournament</li>
+                    <li>Check the leaderboard to see who's winning</li>
+                </ol>
+                
+                <h5 class="mt-4">Scoring System</h5>
+                <p>Scoring is simple - you get points for every point your drafted players score in the tournament. Once a player's team is eliminated, they stop earning points.</p>
+                
+                <div class="alert alert-info mt-4">
+                    <i class="fas fa-sync-alt me-2"></i> Data is updated automatically each night during the tournament.
+                </div>
+                
+                <div class="text-center mt-4">
+                    <button onclick="updateData()" id="update-data-btn" class="btn btn-primary">
+                        <i class="fas fa-sync-alt me-2"></i> Update Data Now
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-chart-line me-2"></i>Tournament Status</h5>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-warning">
+                    <i class="fas fa-exclamation-triangle me-2"></i> Currently using 2024 tournament data for testing. The app will be updated for the 2025 tournament when the pool is set.
+                </div>
+                
+                <div class="row text-center mt-4">
+                    <div class="col-md-3 mb-3">
+                        <div class="card bg-light">
+                            <div class="card-body">
+                                <h3 class="display-4 text-primary">64</h3>
+                                <p class="text-muted mb-0">Teams</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <div class="card bg-light">
+                            <div class="card-body">
+                                <h3 class="display-4 text-primary">800+</h3>
+                                <p class="text-muted mb-0">Players</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <div class="card bg-light">
+                            <div class="card-body">
+                                <h3 class="display-4 text-primary">63</h3>
+                                <p class="text-muted mb-0">Games</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <div class="card bg-light">
+                            <div class="card-body">
+                                <h3 class="display-4 text-primary">19</h3>
+                                <p class="text-muted mb-0">Days</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

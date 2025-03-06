@@ -1,0 +1,23 @@
+[
+  {
+    "name": "Player 1 (Houston)",
+    "position": "G",
+    "jersey_number": 1,
+    "year_in_school": "Freshman",
+    "school": "Houston"
+  },
+  {
+    "name": "Player 2 (Houston)",
+    "position": "F",
+    "jersey_number": 2,
+    "year_in_school": "Sophomore",
+    "school": "Houston"
+  },
+  {
+    "name": "Player 3 (Houston)",
+    "position": "C",
+    "jersey_number": 3,
+    "year_in_school": "Junior",
+    "school": "Houston"
+  }
+]

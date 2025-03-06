@@ -1,0 +1,311 @@
+{% extends 'base.html' %}
+
+{% block title %}Tournament Games - March Madness Fantasy Draft{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h1>Tournament Games ({{ tournament_year }})</h1>
+            <p class="lead">View all tournament games and their results.</p>
+        </div>
+        <div class="col-md-4 text-end">
+            <button id="update-scores-btn" class="btn btn-primary">
+                <i class="fas fa-sync-alt me-2"></i> Update Game Scores
+            </button>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Tournament Games</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Round</th>
+                                    <th>Date</th>
+                                    <th>Team 1</th>
+                                    <th>Score</th>
+                                    <th>Team 2</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% if games %}
+                                    {% for game in games %}
+                                        <tr>
+                                            <td>{{ game.round }}</td>
+                                            <td>{{ game.game_date }}</td>
+                                            <td>{{ game.team1 }}</td>
+                                            <td>
+                                                {% if game.status == 'completed' %}
+                                                    {{ game.team1_score }} - {{ game.team2_score }}
+                                                {% else %}
+                                                    -
+                                                {% endif %}
+                                            </td>
+                                            <td>{{ game.team2 }}</td>
+                                            <td>
+                                                {% if game.status == 'completed' %}
+                                                    <span class="badge bg-success">Completed</span>
+                                                {% elif game.status == 'in_progress' %}
+                                                    <span class="badge bg-warning">In Progress</span>
+                                                {% else %}
+                                                    <span class="badge bg-secondary">Scheduled</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                <a href="#" class="btn btn-sm btn-info view-game-stats" data-game-id="{{ game.id }}">
+                                                    <i class="fas fa-chart-bar me-1"></i> View Stats
+                                                </a>
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                {% else %}
+                                    <tr>
+                                        <td colspan="7" class="text-center">No games found.</td>
+                                    </tr>
+                                {% endif %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Game Stats Modal -->
+    <div class="modal fade" id="gameStatsModal" tabindex="-1" aria-labelledby="gameStatsModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title" id="gameStatsModalLabel">Game Statistics</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="game-stats-content">
+                        <div class="text-center py-4">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                            <p class="mt-2">Loading game statistics...</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Update game scores button
+        const updateScoresBtn = document.getElementById('update-scores-btn');
+        if (updateScoresBtn) {
+            updateScoresBtn.addEventListener('click', function() {
+                // Disable button and show loading state
+                this.disabled = true;
+                this.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span> Updating...';
+                
+                // Send request to update game scores
+                fetch('/api/update_game_scores', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    // Re-enable button
+                    this.disabled = false;
+                    this.innerHTML = '<i class="fas fa-sync-alt me-2"></i> Update Game Scores';
+                    
+                    if (data.success) {
+                        // Show success message
+                        showAlert(data.message || 'Game scores updated successfully!', 'success');
+                        // Reload the page to show updated scores
+                        setTimeout(() => {
+                            window.location.reload();
+                        }, 1500);
+                    } else {
+                        // Show error message
+                        showAlert(`Error: ${data.error || 'Failed to update game scores.'}`, 'danger');
+                    }
+                })
+                .catch(error => {
+                    // Re-enable button
+                    this.disabled = false;
+                    this.innerHTML = '<i class="fas fa-sync-alt me-2"></i> Update Game Scores';
+                    
+                    // Show error message
+                    showAlert(`Error: ${error.message || 'An error occurred while updating game scores.'}`, 'danger');
+                });
+            });
+        }
+        
+        // View game stats buttons
+        const viewGameStatsBtns = document.querySelectorAll('.view-game-stats');
+        const gameStatsModal = new bootstrap.Modal(document.getElementById('gameStatsModal'));
+        const gameStatsContent = document.getElementById('game-stats-content');
+        
+        viewGameStatsBtns.forEach(button => {
+            button.addEventListener('click', function(e) {
+                e.preventDefault();
+                
+                const gameId = this.dataset.gameId;
+                
+                // Show modal with loading state
+                gameStatsContent.innerHTML = `
+                    <div class="text-center py-4">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                        <p class="mt-2">Loading game statistics...</p>
+                    </div>
+                `;
+                gameStatsModal.show();
+                
+                // Fetch game stats
+                fetch(`/api/game_stats/${gameId}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.error) {
+                            gameStatsContent.innerHTML = `
+                                <div class="alert alert-danger">
+                                    ${data.error}
+                                </div>
+                            `;
+                        } else {
+                            // Render game stats
+                            let statsHtml = `
+                                <div class="row mb-3">
+                                    <div class="col-12">
+                                        <h4>${data.team1} vs ${data.team2}</h4>
+                                        <p class="text-muted">Round ${data.round} - ${data.game_date}</p>
+                                    </div>
+                                </div>
+                                
+                                <div class="row mb-3">
+                                    <div class="col-12">
+                                        <h5>Final Score: ${data.team1_score} - ${data.team2_score}</h5>
+                                    </div>
+                                </div>
+                                
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <h5>${data.team1} Players</h5>
+                                        <div class="table-responsive">
+                                            <table class="table table-sm">
+                                                <thead>
+                                                    <tr>
+                                                        <th>Player</th>
+                                                        <th>PTS</th>
+                                                        <th>REB</th>
+                                                        <th>AST</th>
+                                                        <th>STL</th>
+                                                        <th>BLK</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                            `;
+                            
+                            // Add team1 player stats
+                            if (data.team1_players && data.team1_players.length > 0) {
+                                data.team1_players.forEach(player => {
+                                    statsHtml += `
+                                        <tr>
+                                            <td>${player.name}</td>
+                                            <td>${player.points}</td>
+                                            <td>${player.rebounds}</td>
+                                            <td>${player.assists}</td>
+                                            <td>${player.steals}</td>
+                                            <td>${player.blocks}</td>
+                                        </tr>
+                                    `;
+                                });
+                            } else {
+                                statsHtml += `
+                                    <tr>
+                                        <td colspan="6" class="text-center">No player stats available.</td>
+                                    </tr>
+                                `;
+                            }
+                            
+                            statsHtml += `
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <h5>${data.team2} Players</h5>
+                                        <div class="table-responsive">
+                                            <table class="table table-sm">
+                                                <thead>
+                                                    <tr>
+                                                        <th>Player</th>
+                                                        <th>PTS</th>
+                                                        <th>REB</th>
+                                                        <th>AST</th>
+                                                        <th>STL</th>
+                                                        <th>BLK</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                            `;
+                            
+                            // Add team2 player stats
+                            if (data.team2_players && data.team2_players.length > 0) {
+                                data.team2_players.forEach(player => {
+                                    statsHtml += `
+                                        <tr>
+                                            <td>${player.name}</td>
+                                            <td>${player.points}</td>
+                                            <td>${player.rebounds}</td>
+                                            <td>${player.assists}</td>
+                                            <td>${player.steals}</td>
+                                            <td>${player.blocks}</td>
+                                        </tr>
+                                    `;
+                                });
+                            } else {
+                                statsHtml += `
+                                    <tr>
+                                        <td colspan="6" class="text-center">No player stats available.</td>
+                                    </tr>
+                                `;
+                            }
+                            
+                            statsHtml += `
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            `;
+                            
+                            gameStatsContent.innerHTML = statsHtml;
+                        }
+                    })
+                    .catch(error => {
+                        gameStatsContent.innerHTML = `
+                            <div class="alert alert-danger">
+                                An error occurred while loading game statistics: ${error.message}
+                            </div>
+                        `;
+                    });
+            });
+        });
+    });
+</script>
+{% endblock %} 

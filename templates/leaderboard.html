@@ -1,0 +1,166 @@
+{% extends 'base.html' %}
+
+{% block title %}Leaderboard - March Madness Fantasy Draft{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-8">
+        <h1>Leaderboard</h1>
+        <p class="text-muted">Current standings in your fantasy draft</p>
+    </div>
+    <div class="col-md-4 text-end">
+        <button onclick="updateData()" id="update-data-btn" class="btn btn-primary">
+            <i class="fas fa-sync-alt me-2"></i> Update Scores
+        </button>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-trophy me-2"></i>Current Standings</h5>
+            </div>
+            <div class="card-body">
+                {% if leaderboard %}
+                <div class="leaderboard">
+                    {% for entry in leaderboard %}
+                    <div class="leaderboard-item d-flex align-items-center mb-3 {{ 'bg-warning bg-opacity-25' if loop.index == 1 }}">
+                        <div class="leaderboard-rank me-4">{{ loop.index }}</div>
+                        <div class="flex-grow-1">
+                            <h5 class="mb-1">{{ entry.name }}</h5>
+                            <div class="text-muted small">{{ entry.draft_picks|length }} players drafted</div>
+                        </div>
+                        <div class="leaderboard-score">{{ entry.score }} pts</div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i> No participants have been added yet, or no players have been drafted. Visit the <a href="{{ url_for('participants') }}">Participants</a> page to add participants and the <a href="{{ url_for('draft') }}">Draft</a> page to draft players.
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-info-circle me-2"></i>Scoring Info</h5>
+            </div>
+            <div class="card-body">
+                <p>Scoring is based on the total points scored by each participant's drafted players throughout the tournament.</p>
+                
+                <div class="alert alert-info">
+                    <i class="fas fa-basketball-ball me-2"></i> 1 tournament point = 1 fantasy point
+                </div>
+                
+                <p class="mb-0"><strong>Important Notes:</strong></p>
+                <ul>
+                    <li>Players stop earning points when their team is eliminated from the tournament.</li>
+                    <li>Scores are updated automatically each night during the tournament.</li>
+                    <li>You can manually update scores using the "Update Scores" button.</li>
+                </ul>
+            </div>
+        </div>
+        
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-chart-line me-2"></i>Tournament Progress</h5>
+            </div>
+            <div class="card-body">
+                <div class="progress mb-3" style="height: 25px;">
+                    <div class="progress-bar bg-primary" role="progressbar" style="width: 40%;" aria-valuenow="40" aria-valuemin="0" aria-valuemax="100">40%</div>
+                </div>
+                
+                <div class="d-flex justify-content-between mb-3">
+                    <div class="text-center">
+                        <h5 class="mb-0">First Round</h5>
+                        <div class="badge bg-success">Complete</div>
+                    </div>
+                    <div class="text-center">
+                        <h5 class="mb-0">Sweet 16</h5>
+                        <div class="badge bg-primary">In Progress</div>
+                    </div>
+                    <div class="text-center">
+                        <h5 class="mb-0">Final Four</h5>
+                        <div class="badge bg-secondary">Upcoming</div>
+                    </div>
+                </div>
+                
+                <div class="alert alert-warning">
+                    <i class="fas fa-exclamation-triangle me-2"></i> This is sample data. Real tournament progress will be shown during the actual tournament.
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-star me-2"></i>Top Performing Players</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Rank</th>
+                                <th>Player</th>
+                                <th>School</th>
+                                <th>Points</th>
+                                <th>Drafted By</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Sample data - would be replaced with actual top performers -->
+                            <tr>
+                                <td>1</td>
+                                <td>Drew Timme</td>
+                                <td><span class="player-seed">1</span> Gonzaga</td>
+                                <td>68</td>
+                                <td>John Doe</td>
+                            </tr>
+                            <tr>
+                                <td>2</td>
+                                <td>Jared Butler</td>
+                                <td><span class="player-seed">1</span> Baylor</td>
+                                <td>62</td>
+                                <td>Jane Smith</td>
+                            </tr>
+                            <tr>
+                                <td>3</td>
+                                <td>Evan Mobley</td>
+                                <td><span class="player-seed">6</span> USC</td>
+                                <td>58</td>
+                                <td>Bob Johnson</td>
+                            </tr>
+                            <tr>
+                                <td>4</td>
+                                <td>Johnny Juzang</td>
+                                <td><span class="player-seed">11</span> UCLA</td>
+                                <td>57</td>
+                                <td>Sarah Williams</td>
+                            </tr>
+                            <tr>
+                                <td>5</td>
+                                <td>Quentin Grimes</td>
+                                <td><span class="player-seed">2</span> Houston</td>
+                                <td>55</td>
+                                <td>Mike Brown</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div class="alert alert-warning mt-3">
+                    <i class="fas fa-exclamation-triangle me-2"></i> This is sample data. Real player performance will be shown during the actual tournament.
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

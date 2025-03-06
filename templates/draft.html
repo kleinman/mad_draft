@@ -1,0 +1,412 @@
+{% extends 'base.html' %}
+
+{% block title %}Draft - March Madness Fantasy Draft{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-8">
+        <h1>Draft Management</h1>
+        <p class="text-muted">Manage your fantasy draft and assign players to participants</p>
+    </div>
+    <div class="col-md-4 text-end">
+        <a href="{{ url_for('players') }}" class="btn btn-primary">
+            <i class="fas fa-user-plus me-2"></i> Draft More Players
+        </a>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-3">
+        <div class="card draft-controls sticky-top">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-cog me-2"></i>Draft Controls</h5>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <label for="participant-select" class="form-label">Current Drafter</label>
+                    {% if participants|length == 0 %}
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle me-2"></i> No participants found. <a href="{{ url_for('participants') }}">Add participants</a> before drafting.
+                    </div>
+                    {% endif %}
+                    <select class="form-select" id="participant-select" {% if participants|length == 0 %}disabled{% endif %}>
+                        <option value="">Select Participant</option>
+                        {% for participant in participants %}
+                        <option value="{{ participant.id }}">{{ participant.name }}</option>
+                        {% endfor %}
+                    </select>
+                    
+                    <div class="form-check mt-2">
+                        <input class="form-check-input" type="checkbox" id="autodraft-checkbox">
+                        <label class="form-check-label" for="autodraft-checkbox">
+                            Enable Autodraft (highest PPG)
+                        </label>
+                        <small class="text-muted d-block">When enabled, this participant will automatically draft the available player with the highest PPG.</small>
+                    </div>
+                </div>
+                
+                <div class="mb-3">
+                    <label for="draft-position" class="form-label">Draft Position</label>
+                    <input type="number" class="form-control" id="draft-position" value="{{ draft_picks|length + 1 }}">
+                </div>
+                
+                <div class="mb-3">
+                    <label class="form-label">Draft Type</label>
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="draft-type" id="snake-draft" value="snake" checked>
+                        <label class="form-check-label" for="snake-draft">
+                            Snake Draft
+                        </label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="draft-type" id="standard-draft" value="standard">
+                        <label class="form-check-label" for="standard-draft">
+                            Standard Draft
+                        </label>
+                    </div>
+                </div>
+                
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i> In a snake draft, the order reverses each round.
+                </div>
+                
+                <div class="mb-3">
+                    <label class="form-label">Draft Order</label>
+                    <div id="draft-order-container" class="mb-2">
+                        {% if participants|length > 0 %}
+                        <ol class="list-group list-group-numbered" id="draft-order-list">
+                            {% for participant in participants %}
+                            <li class="list-group-item d-flex justify-content-between align-items-center" data-participant-id="{{ participant.id }}">
+                                {{ participant.name }}
+                                <div class="btn-group">
+                                    <button type="button" class="btn btn-sm btn-outline-secondary move-up-btn" {% if loop.first %}disabled{% endif %}>
+                                        <i class="fas fa-arrow-up"></i>
+                                    </button>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary move-down-btn" {% if loop.last %}disabled{% endif %}>
+                                        <i class="fas fa-arrow-down"></i>
+                                    </button>
+                                </div>
+                            </li>
+                            {% endfor %}
+                        </ol>
+                        {% else %}
+                        <div class="alert alert-warning">
+                            <i class="fas fa-exclamation-triangle me-2"></i> Add participants to set draft order.
+                        </div>
+                        {% endif %}
+                    </div>
+                    <button id="randomize-order-btn" class="btn btn-outline-secondary btn-sm" {% if participants|length < 2 %}disabled{% endif %}>
+                        <i class="fas fa-random me-1"></i> Randomize Order
+                    </button>
+                </div>
+                
+                <div class="mb-3">
+                    <button id="start-draft-btn" class="btn btn-success w-100" {% if participants|length < 2 %}disabled{% endif %}>
+                        <i class="fas fa-play me-1"></i> Start Draft
+                    </button>
+                    <button id="stop-draft-btn" class="btn btn-danger w-100 mt-2" style="display: none;">
+                        <i class="fas fa-stop me-1"></i> Stop Draft
+                    </button>
+                    <button id="resume-draft-btn" class="btn btn-primary w-100 mt-2" style="display: none;">
+                        <i class="fas fa-redo me-1"></i> Resume Draft
+                    </button>
+                </div>
+                
+                <div class="mb-3">
+                    <button id="reset-draft-btn" class="btn btn-warning w-100">
+                        <i class="fas fa-trash me-1"></i> Reset Draft
+                    </button>
+                    <small class="text-muted mt-1 d-block">This will delete all draft picks and make all players available again.</small>
+                </div>
+                
+                <div id="draft-status" class="alert alert-info mt-3" style="display: none;">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <strong>Round: <span id="current-round">1</span></strong>
+                        </div>
+                        <div id="draft-direction">
+                            <span id="direction-indicator" class="badge bg-primary">
+                                <i class="fas fa-arrow-down"></i> Forward
+                            </span>
+                        </div>
+                    </div>
+                    <div class="mt-2">
+                        <strong>On the clock:</strong> <span id="current-drafter">-</span>
+                    </div>
+                </div>
+                
+                <div class="text-center mt-4">
+                    <a href="{{ url_for('participants') }}" class="btn btn-outline-primary w-100 mb-2">
+                        <i class="fas fa-users me-2"></i> Manage Participants
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-9">
+        <div class="card mb-4">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i class="fas fa-clipboard-list me-2"></i>Current Draft</h5>
+                <div class="d-flex">
+                    <select id="player-filter" class="form-select form-select-sm me-2" style="width: auto;">
+                        <option value="all">All Players</option>
+                        {% for participant in participants %}
+                        <option value="{{ participant.id }}">{{ participant.name }}</option>
+                        {% endfor %}
+                    </select>
+                    <button id="apply-player-filter" class="btn btn-sm btn-outline-primary">Filter</button>
+                </div>
+            </div>
+            <div class="card-body">
+                {% if draft_picks %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Participant</th>
+                                <th>Player</th>
+                                <th>School</th>
+                                <th>Stats</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for pick in draft_picks|sort(attribute='draft_position') %}
+                            <tr class="draft-pick" data-pick-id="{{ pick.id }}">
+                                <td>{{ pick.draft_position }}</td>
+                                <td>{{ pick.participant.name }}</td>
+                                <td>{{ pick.player.name }}</td>
+                                <td>
+                                    <span class="player-seed">{{ pick.player.school_seed }}</span>
+                                    {{ pick.player.school }}
+                                    <span class="ms-2 badge 
+                                    {% if pick.player.region == 'West' %}
+                                        bg-danger
+                                    {% elif pick.player.region == 'East' %}
+                                        bg-success
+                                    {% elif pick.player.region == 'South' %}
+                                        bg-warning text-dark
+                                    {% elif pick.player.region == 'Midwest' %}
+                                        bg-primary
+                                    {% else %}
+                                        bg-info
+                                    {% endif %}
+                                    ">{{ pick.player.region }}</span>
+                                </td>
+                                <td>{{ pick.player.ppg|default('0.0', true) }} PPG</td>
+                                <td>
+                                    <button class="btn btn-sm btn-danger remove-draft-btn" 
+                                            data-pick-id="{{ pick.id }}" 
+                                            data-player-name="{{ pick.player.name }}">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i> No players have been drafted yet. Go to the <a href="{{ url_for('players') }}">Players</a> page to start drafting.
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <div class="card mb-4">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i class="fas fa-basketball-ball me-2"></i>Available Players</h5>
+                <div class="d-flex">
+                    <select id="available-status-filter" class="form-select form-select-sm me-2" style="width: auto;">
+                        <option value="undrafted" selected>Undrafted</option>
+                        <option value="drafted">Drafted</option>
+                        <option value="all">All Players</option>
+                    </select>
+                    <button id="refresh-players-btn" class="btn btn-sm btn-outline-secondary ms-2">
+                        <i class="fas fa-sync-alt"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="card-body">
+                <div id="available-players-container" class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+                    <!-- Players will be loaded here dynamically -->
+                    <div class="text-center w-100 py-4">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                        <p class="mt-2">Loading players...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-users me-2"></i>Draft Board</h5>
+            </div>
+            <div class="card-body">
+                <div class="row" id="draft-board">
+                    {% for participant in participants %}
+                    <div class="col-md-3 mb-4">
+                        <div class="card h-100">
+                            <div class="card-header">
+                                {{ participant.name }}
+                            </div>
+                            <div class="card-body">
+                                <ul class="list-group">
+                                    {% for pick in participant.draft_picks|sort(attribute='draft_position') %}
+                                    <li class="list-group-item">
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <div>
+                                                <span class="draft-pick-number">#{{ pick.draft_position }}</span>
+                                                <span class="ms-2">{{ pick.player.name }}</span>
+                                            </div>
+                                            <span class="badge bg-primary">{{ pick.player.school }}</span>
+                                        </div>
+                                        <div class="player-stats mt-1">
+                                            {{ pick.player.ppg|default('0.0', true) }} PPG | {{ pick.player.rpg|default('0.0', true) }} RPG | {{ pick.player.apg|default('0.0', true) }} APG
+                                        </div>
+                                    </li>
+                                    {% else %}
+                                    <li class="list-group-item text-center text-muted">
+                                        No players drafted
+                                    </li>
+                                    {% endfor %}
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{% if draft_player %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Auto-draft the player if draft_player is provided
+        const participantSelect = document.getElementById('participant-select');
+        
+        // Show a warning message to select a participant
+        showAlert('Please select a participant before drafting ' + '{{ draft_player.name }}', 'warning');
+        
+        // Add an event listener to the participant select
+        participantSelect.addEventListener('change', function() {
+            if (this.value) {
+                const participantId = this.value;
+                const participantName = this.options[this.selectedIndex].text;
+                const playerId = '{{ draft_player.id }}';
+                const playerName = '{{ draft_player.name }}';
+            
+            // Get the current draft position
+            const draftPositionInput = document.getElementById('draft-position');
+            const draftPosition = draftPositionInput ? draftPositionInput.value : null;
+            
+            // Send draft pick to server
+            fetch('/api/draft_pick', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    participant_id: participantId,
+                    player_id: playerId,
+                    draft_position: draftPosition
+                }),
+            })
+            .then(response => {
+                if (!response.ok) {
+                    return response.json().then(err => {
+                        throw new Error(err.error || 'Failed to draft player');
+                    });
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.error) {
+                    showAlert(`Error: ${data.error}`, 'danger');
+                } else {
+                    // Show success message
+                    showAlert(`${playerName} drafted by ${participantName}!`, 'success');
+                    
+                    // Update draft board
+                    setTimeout(() => {
+                        updateDraftBoard();
+                        // Remove the draft_player parameter from the URL
+                        window.history.replaceState({}, document.title, '/draft');
+                    }, 500);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showAlert(`Error: ${error.message || 'An error occurred while drafting the player.'}`, 'danger');
+            });
+            }
+        });
+    });
+</script>
+{% endif %}
+
+<!-- Script to manually load available players -->
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log('Draft page loaded, manually triggering loadAvailablePlayers');
+        
+        // Make sure the container exists
+        const availablePlayersContainer = document.getElementById('available-players-container');
+        if (availablePlayersContainer) {
+            console.log('Found availablePlayersContainer, loading players');
+            
+            // Add refresh button functionality
+            const refreshBtn = document.getElementById('refresh-players-btn');
+            if (refreshBtn) {
+                refreshBtn.addEventListener('click', function() {
+                    console.log('Refresh button clicked');
+                    loadAvailablePlayers();
+                });
+            }
+            
+            // Add filter change functionality
+            const filterSelect = document.getElementById('available-status-filter');
+            if (filterSelect) {
+                filterSelect.addEventListener('change', function() {
+                    console.log('Filter changed to:', this.value);
+                    loadAvailablePlayers();
+                });
+            }
+            
+            // Manually trigger loadAvailablePlayers after a short delay
+            setTimeout(function() {
+                if (typeof loadAvailablePlayers === 'function') {
+                    loadAvailablePlayers();
+                } else {
+                    console.error('loadAvailablePlayers function not found');
+                    availablePlayersContainer.innerHTML = `
+                        <div class="col-12 text-center py-4">
+                            <div class="alert alert-danger">
+                                <i class="fas fa-exclamation-triangle me-2"></i>
+                                Error: Could not load players. Please refresh the page.
+                            </div>
+                            <button onclick="window.location.reload()" class="btn btn-primary mt-3">
+                                <i class="fas fa-sync-alt me-2"></i> Refresh Page
+                            </button>
+                        </div>
+                    `;
+                }
+            }, 500);
+        } else {
+            console.error('availablePlayersContainer not found');
+        }
+    });
+</script>
+
+<!-- Include test script -->
+<script src="{{ url_for('static', filename='js/test.js') }}"></script>
+{% endblock %}
