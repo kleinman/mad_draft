@@ -8,11 +8,27 @@ from datetime import datetime, timedelta
 from models import db, Player, TournamentGame, PlayerTournamentStat
 from config import TOURNAMENT_YEAR, ESPN_BASE_URL
 
+
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 class MarchMadnessScraper:
+    """
+    Provides capabilities to scrape and manage data related to the NCAA March Madness tournament.
+
+    This class supports methods to scrape tournament teams, team rosters, and player statistics.
+    Implementations include caching the data locally in JSON files to minimize redundant
+    network requests. It also interacts with web pages using the Beautiful Soup library to
+    parse HTML content, and provides options for customizing requests such as forcing fresh
+    scrapes instead of using cached data.
+
+    Attributes:
+        base_url: Base API or website URL for accessing NCAA or ESPN-related data.
+        headers: HTTP headers used for making requests, including a User-Agent string to
+                 minimize bot detection issues.
+        data_dir: Directory location where cached JSON data is stored.
+    """
     def __init__(self, base_url=ESPN_BASE_URL):
         self.base_url = base_url
         self.headers = {

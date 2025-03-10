@@ -116,6 +116,16 @@ function initializeDraftButtons() {
                     // Show success message
                     showAlert(`${playerName} drafted by ${participantName}!`, 'success');
                     
+                    // Dispatch draftPickMade event
+                    document.dispatchEvent(new CustomEvent('draftPickMade', {
+                        detail: {
+                            playerId: playerId,
+                            playerName: playerName,
+                            participantId: participantId,
+                            participantName: participantName
+                        }
+                    }));
+                    
                     // If draft mode is active, advance to next drafter
                     if (isDraftModeActive) {
                         console.log('Draft mode is active, advancing to next drafter');
@@ -540,6 +550,16 @@ function initDraftFunctionality() {
                     // Show success message
                     showAlert(`${playerName} drafted by ${participantName}!`, 'success');
                     
+                    // Dispatch draftPickMade event
+                    document.dispatchEvent(new CustomEvent('draftPickMade', {
+                        detail: {
+                            playerId: playerId,
+                            playerName: playerName,
+                            participantId: participantId,
+                            participantName: participantName
+                        }
+                    }));
+                    
                     // If draft mode is active, advance to next drafter
                     if (isDraftModeActive) {
                         console.log('Draft mode is active, advancing to next drafter');
@@ -775,6 +795,12 @@ function initStartDraftButton() {
             
             // Show alert for who's on the clock
             showAlert(`${draftOrder[0].name} is on the clock!`, 'info');
+            
+            // Reset and start the timer if it exists
+            if (typeof resetTimer === 'function' && typeof startTimer === 'function') {
+                resetTimer();
+                startTimer();
+            }
         }
     });
     
@@ -881,6 +907,12 @@ function initStartDraftButton() {
             const currentDrafter = draftOrder[currentDrafterIndex];
             const directionIcon = draftDirection === 'forward' ? '↓' : '↑';
             showAlert(`Draft resumed! Round ${currentDraftRound}: ${currentDrafter.name} is on the clock! ${directionIcon}`, 'success');
+            
+            // Reset and start the timer if it exists
+            if (typeof resetTimer === 'function' && typeof startTimer === 'function') {
+                resetTimer();
+                startTimer();
+            }
         });
     }
 }
@@ -990,6 +1022,12 @@ function advanceToNextDrafter() {
         const directionIcon = draftDirection === 'forward' ? '↓' : '↑';
         showAlert(`${currentDrafter.name} is on the clock! ${directionIcon}`, 'info');
         
+        // Reset and start the timer if it exists
+        if (typeof resetTimer === 'function' && typeof startTimer === 'function') {
+            resetTimer();
+            startTimer();
+        }
+        
         // Check if autodraft is enabled for this participant
         if (autodraftParticipants[currentDrafter.id]) {
             console.log('Autodraft enabled for', currentDrafter.name);
@@ -1077,6 +1115,16 @@ function autodraftPlayer(participantId, participantName) {
                     
                     // Show success message
                     showAlert(`AUTODRAFT: ${topPlayer.name} (${topPlayer.ppg} PPG) drafted by ${participantName}!`, 'success');
+                    
+                    // Dispatch draftPickMade event
+                    document.dispatchEvent(new CustomEvent('draftPickMade', {
+                        detail: {
+                            playerId: topPlayer.id,
+                            playerName: topPlayer.name,
+                            participantId: participantId,
+                            participantName: participantName
+                        }
+                    }));
                     
                     // Update draft board and reload players
                     setTimeout(() => {

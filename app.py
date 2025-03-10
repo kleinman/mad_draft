@@ -44,6 +44,7 @@ def inject_now():
         'now': datetime.now(),
         'tournament_year': TOURNAMENT_YEAR
     }
+"""
 
 @app.before_request
 def check_data():
